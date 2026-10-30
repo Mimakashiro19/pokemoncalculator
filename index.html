@@ -1,0 +1,1595 @@
+
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pokémon Calculator</title>
+
+<style>
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+:root {
+    --bg: #edf3ee;
+    --card: #ffffff;
+    --text: #405448;
+    --sub: #87978c;
+    --button: #f1f5f1;
+    --operator: #dcebe0;
+    --accent: #a4c5ad;
+    --shadow: rgba(70,100,80,.14);
+}
+
+body.dark {
+    --bg: #252b36;
+    --card: #353e4d;
+    --text: #edf0f6;
+    --sub: #aab6c6;
+    --button: #46505f;
+    --operator: #566a7b;
+    --accent: #8da8c6;
+    --shadow: rgba(0,0,0,.3);
+}
+
+body {
+    min-height: 100vh;
+    background: var(--bg);
+    color: var(--text);
+    font-family: Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    overflow-x: hidden;
+    padding: 25px 15px;
+    transition: .3s;
+}
+
+/* ผลโปเกมอน */
+.pokemon-found {
+    position: absolute;
+    top: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    z-index: 20;
+    min-height: 65px;
+    max-width: 90%;
+}
+
+.pokemon-found a {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text);
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 15px;
+    white-space: nowrap;
+    transition: .2s;
+}
+
+.pokemon-found a:hover {
+    color: #d18a55;
+    transform: scale(1.04);
+}
+
+.pokemon-found img {
+    width: 55px;
+    height: 55px;
+    object-fit: contain;
+    filter: drop-shadow(0 3px 4px var(--shadow));
+}
+
+.pokemon-number {
+    font-size: 12px;
+    color: var(--sub);
+}
+
+/* ชื่อด้านบน */
+.page-title {
+    font-size: 27px;
+    font-weight: bold;
+    margin-bottom: 18px;
+    text-align: center;
+    position: relative;
+    z-index: 10;
+}
+
+/* เครื่องมือ */
+.toolbar {
+    position: fixed;
+    top: 15px;
+    right: 18px;
+    display: flex;
+    gap: 8px;
+    z-index: 50;
+}
+
+.toolbar button {
+    border: none;
+    border-radius: 20px;
+    padding: 10px 14px;
+    background: var(--card);
+    color: var(--text);
+    cursor: pointer;
+    box-shadow: 0 3px 12px var(--shadow);
+}
+
+/* ตราประจำตัว */
+.upload-panel {
+    position: fixed;
+    top: 22px;
+    left: 22px;
+    z-index: 30;
+}
+
+.emblem-frame {
+    display: block;
+    width: 105px;
+    height: 105px;
+    padding: 5px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #d9b86b, #f7e7b1, #b28b48);
+    box-shadow: 0 3px 10px var(--shadow);
+    cursor: pointer;
+}
+
+.emblem-inner {
+    width: 100%;
+    height: 100%;
+    border: 3px solid var(--card);
+    border-radius: 50%;
+    overflow: hidden;
+    background: var(--button);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.emblem-inner img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: none;
+}
+
+.emblem-placeholder {
+    font-size: 30px;
+    color: var(--sub);
+}
+
+/* เครื่องคิดเลข */
+.calculator {
+    position: relative;
+    z-index: 10;
+    width: 335px;
+    max-width: 100%;
+    padding: 22px;
+    background: var(--card);
+    border-radius: 25px;
+    box-shadow: 0 12px 35px var(--shadow);
+}
+
+/* หน้าจอ */
+.display {
+    background: var(--button);
+    border-radius: 16px;
+    padding: 14px;
+    min-height: 112px;
+    margin-bottom: 16px;
+    text-align: right;
+    overflow: hidden;
+}
+
+.expression {
+    color: var(--sub);
+    font-size: 14px;
+    min-height: 20px;
+    overflow-wrap: anywhere;
+}
+
+.result {
+    font-size: 30px;
+    font-weight: bold;
+    margin-top: 12px;
+    overflow-wrap: anywhere;
+}
+
+/* ปุ่ม */
+.buttons {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 9px;
+}
+
+.buttons button {
+    position: relative;
+    height: 57px;
+    border: none;
+    border-radius: 15px;
+    background: var(--button);
+    color: var(--text);
+    font-size: 20px;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 3px 7px var(--shadow);
+    transition: transform .15s, filter .15s;
+    overflow: hidden;
+}
+
+.buttons button:hover {
+    transform: translateY(-2px);
+    filter: brightness(.97);
+}
+
+.buttons button:active {
+    transform: scale(.94);
+}
+
+.buttons .operator {
+    background: var(--operator);
+    color: var(--text);
+}
+
+.buttons .clear {
+    background: #e9c5c5;
+    color: #754747;
+}
+
+.buttons .equal {
+    background: var(--accent);
+    color: white;
+}
+
+/* ตัวเลขกลางปุ่ม */
+.buttons .number {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 5;
+    font-size: 20px;
+    line-height: 1;
+    color: var(--text);
+    pointer-events: none;
+    transition: .2s;
+}
+
+/* โปเกบอลเล็ก */
+.ball-icon {
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    right: 5px;
+    bottom: 5px;
+    border-radius: 50%;
+    border: 1.5px solid #343434;
+    background: linear-gradient(
+        to bottom,
+        var(--ball-color) 0%,
+        var(--ball-color) 43%,
+        #292929 43%,
+        #292929 55%,
+        #fff 55%,
+        #fff 100%
+    );
+    z-index: 3;
+    box-shadow: 0 1px 3px rgba(0,0,0,.25);
+    transition: all .25s ease;
+    pointer-events: none;
+}
+
+.ball-icon::before {
+    content: "";
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    border: 1.5px solid #333;
+    border-radius: 50%;
+    background: #fff;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+/* สีโปเกบอล */
+.ball-poke { --ball-color: #f16b6b; }
+.ball-great { --ball-color: #5b9ee6; }
+.ball-ultra { --ball-color: #e9c34e; }
+.ball-master { --ball-color: #a77bd0; }
+.ball-premier { --ball-color: #eeeeee; }
+.ball-heal { --ball-color: #ef9fbe; }
+.ball-net { --ball-color: #5ab8b5; }
+.ball-dusk { --ball-color: #69758f; }
+.ball-quick { --ball-color: #edbd54; }
+.ball-luxury { --ball-color: #777; }
+
+/* ลายเฉพาะแต่ละบอล */
+.ball-great .ball-icon {
+    background:
+        linear-gradient(135deg, transparent 35%, #fff 36% 43%, transparent 44%),
+        linear-gradient(to bottom, #5b9ee6 0 43%, #292929 43% 55%, #fff 55%);
+}
+
+.ball-ultra .ball-icon {
+    background:
+        radial-gradient(circle at 75% 20%, #292929 0 2px, transparent 2.5px),
+        linear-gradient(to bottom, #e9c34e 0 43%, #292929 43% 55%, #fff 55%);
+}
+
+.ball-master .ball-icon {
+    background:
+        radial-gradient(circle at 25% 25%, #fff 0 2px, transparent 2.5px),
+        linear-gradient(to bottom, #a77bd0 0 43%, #292929 43% 55%, #fff 55%);
+}
+
+.ball-premier .ball-icon {
+    background: linear-gradient(to bottom, #fff 0 43%, #777 43% 55%, #fff 55%);
+}
+
+.ball-heal .ball-icon {
+    background:
+        radial-gradient(circle at 50% 18%, #fff 0 2px, transparent 2.5px),
+        linear-gradient(to bottom, #ef9fbe 0 43%, #292929 43% 55%, #fff 55%);
+}
+
+.ball-net .ball-icon {
+    background:
+        repeating-linear-gradient(45deg, transparent 0 4px, rgba(0,0,0,.2) 4px 5px),
+        linear-gradient(to bottom, #5ab8b5 0 43%, #292929 43% 55%, #fff 55%);
+}
+
+.ball-dusk .ball-icon {
+    background:
+        radial-gradient(circle at 50% 20%, #9aabdc 0 2px, transparent 2.5px),
+        linear-gradient(to bottom, #69758f 0 43%, #292929 43% 55%, #fff 55%);
+}
+
+.ball-quick .ball-icon {
+    background:
+        linear-gradient(45deg, transparent 40%, #fff 41% 47%, transparent 48%),
+        linear-gradient(to bottom, #edbd54 0 43%, #292929 43% 55%, #fff 55%);
+}
+
+.ball-luxury .ball-icon {
+    background:
+        radial-gradient(circle at 50% 18%, #f7d875 0 2px, transparent 2.5px),
+        linear-gradient(to bottom, #555 0 43%, #292929 43% 55%, #fff 55%);
+}
+
+/* เอฟเฟกต์ตอนกด */
+.buttons button.ball-button.is-pressed {
+    transform: scale(1.02);
+    filter: brightness(1.04);
+}
+
+.ball-button.is-pressed .ball-icon {
+    width: 43px;
+    height: 43px;
+    right: 50%;
+    bottom: 50%;
+    transform: translate(50%, 50%);
+    border-width: 2px;
+    z-index: 4;
+    box-shadow: 0 0 12px rgba(255,255,255,.7);
+}
+
+.ball-button.is-pressed .number {
+    font-size: 25px;
+    color: #222 !important;
+    text-shadow: 0 1px 3px white, 0 -1px 3px white;
+    z-index: 6;
+}
+
+/* ดาวกระจาย */
+.ball-sparkles {
+    position: absolute;
+    inset: 0;
+    z-index: 8;
+    pointer-events: none;
+    display: none;
+}
+
+.ball-button.is-pressed .ball-sparkles {
+    display: block;
+}
+
+.ball-sparkles span {
+    position: absolute;
+    color: #f5c95c;
+    font-size: 15px;
+    opacity: 0;
+    animation: sparkle .8s ease-out forwards;
+    text-shadow: 0 0 5px #fff;
+}
+
+.ball-sparkles span:nth-child(1) { top: 8px; left: 13px; }
+.ball-sparkles span:nth-child(2) { top: 8px; right: 13px; animation-delay: .08s; }
+.ball-sparkles span:nth-child(3) { bottom: 8px; left: 13px; animation-delay: .12s; }
+.ball-sparkles span:nth-child(4) { bottom: 8px; right: 13px; animation-delay: .05s; }
+.ball-sparkles span:nth-child(5) { top: 2px; left: 50%; animation-delay: .15s; }
+
+@keyframes sparkle {
+    0% { opacity: 0; transform: scale(.2) rotate(0deg); }
+    35% { opacity: 1; transform: scale(1.3) rotate(90deg); }
+    100% { opacity: 0; transform: scale(.4) rotate(180deg); }
+}
+
+/* โปเกมอนเดินเล่น */
+.pokemon {
+    position: fixed;
+    width: 85px;
+    height: 85px;
+    object-fit: contain;
+    z-index: 2;
+    pointer-events: none;
+    animation: float 3s ease-in-out infinite;
+    filter: drop-shadow(0 4px 5px var(--shadow));
+}
+
+@keyframes float {
+    0%,100% { transform: translateY(0); }
+    50% { transform: translateY(-12px); }
+}
+
+.walker-0 { top: 145px; left: 22px; }
+.walker-1 { top: 20px; right: 190px; animation-delay: .5s; }
+.walker-2 { bottom: 20px; left: 20%; animation-delay: 1s; }
+.walker-3 { bottom: 20px; right: 20%; animation-delay: 1.5s; }
+.walker-4 { top: 45%; left: 18px; animation-delay: .8s; }
+.walker-5 { top: 45%; right: 18px; animation-delay: 1.2s; }
+
+/* ---------------- โปเกมอนสุ่มปรากฏตัว ---------------- */
+
+#randomEncounter {
+    position: fixed;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    overflow: hidden;
+    display: none;
+}
+
+#randomPokemon {
+    position: absolute;
+    width: 180px;
+    height: 180px;
+    object-fit: contain;
+    opacity: 0;
+    filter: drop-shadow(0 5px 12px rgba(0,0,0,.2));
+}
+
+/* บินผ่านหน้าจอ */
+#randomEncounter.flying {
+    display: block;
+}
+
+#randomEncounter.flying #randomPokemon {
+    width: 150px;
+    height: 150px;
+    top: 50%;
+    left: -200px;
+    animation: pokemonFly 3s linear forwards;
+}
+
+@keyframes pokemonFly {
+    0% {
+        transform: translate(-100px, -50%) rotate(-10deg);
+        opacity: 0;
+    }
+    15% {
+        opacity: 1;
+    }
+    50% {
+        transform: translate(50vw, -65%) rotate(5deg);
+        opacity: 1;
+    }
+    85% {
+        opacity: 1;
+    }
+    100% {
+        transform: translate(120vw, -50%) rotate(10deg);
+        opacity: 0;
+    }
+}
+
+/* ภาพโปเกมอนขนาดใหญ่ */
+#randomEncounter.background {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#randomEncounter.background #randomPokemon {
+    position: relative;
+    width: min(65vw, 500px);
+    height: min(65vw, 500px);
+    object-fit: contain;
+    animation: pokemonAppear 3s ease-in-out forwards;
+}
+
+@keyframes pokemonAppear {
+    0% {
+        transform: scale(.5);
+        opacity: 0;
+    }
+    20% {
+        transform: scale(1);
+        opacity: .35;
+    }
+    70% {
+        transform: scale(1.05);
+        opacity: .35;
+    }
+    100% {
+        transform: scale(1.2);
+        opacity: 0;
+    }
+}
+
+/* หน้าต่างเลือกโปเกมอน */
+#pokemonPicker {
+    display: none;
+    position: fixed;
+    top: 60px;
+    right: 18px;
+    z-index: 60;
+    background: var(--card);
+    color: var(--text);
+    padding: 15px;
+    border-radius: 15px;
+    box-shadow: 0 5px 20px var(--shadow);
+    width: 220px;
+}
+
+#pokemonOptions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 9px;
+    margin-top: 12px;
+    font-size: 13px;
+}
+
+#pokemonCount {
+    margin-top: 10px;
+    font-size: 12px;
+    color: var(--sub);
+}
+
+/* แท็บประวัติ */
+.history-tab {
+    position: fixed;
+    top: 50%;
+    right: 0;
+    transform: translateY(-50%);
+    z-index: 80;
+    border: none;
+    background: var(--card);
+    color: var(--text);
+    padding: 16px 9px;
+    border-radius: 12px 0 0 12px;
+    box-shadow: -3px 3px 12px var(--shadow);
+    cursor: pointer;
+    writing-mode: vertical-rl;
+    font-size: 13px;
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
+.history-panel {
+    position: fixed;
+    top: 50%;
+    right: -320px;
+    transform: translateY(-50%);
+    width: 280px;
+    max-height: 75vh;
+    overflow-y: auto;
+    background: var(--card);
+    color: var(--text);
+    border-radius: 18px 0 0 18px;
+    padding: 17px;
+    z-index: 79;
+    box-shadow: -5px 5px 25px var(--shadow);
+    transition: right .3s ease;
+}
+
+.history-panel.open {
+    right: 0;
+}
+
+.history-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+}
+
+.history-header button {
+    border: none;
+    background: var(--button);
+    color: var(--text);
+    border-radius: 8px;
+    padding: 6px 10px;
+    cursor: pointer;
+}
+
+.history-item {
+    width: 100%;
+    border: none;
+    border-radius: 12px;
+    padding: 11px;
+    margin-bottom: 9px;
+    background: var(--button);
+    color: var(--text);
+    text-align: left;
+    cursor: pointer;
+    transition: .15s;
+}
+
+.history-item:hover {
+    transform: translateX(-3px);
+    background: var(--operator);
+}
+
+.history-expression {
+    font-size: 12px;
+    color: var(--sub);
+    overflow-wrap: anywhere;
+}
+
+.history-result {
+    font-size: 19px;
+    font-weight: bold;
+    margin-top: 5px;
+}
+
+.history-empty {
+    text-align: center;
+    color: var(--sub);
+    font-size: 13px;
+    padding: 25px 5px;
+}
+
+/* มือถือ */
+@media (max-width: 650px) {
+    .upload-panel {
+        top: 65px;
+        left: 8px;
+    }
+
+    .emblem-frame {
+        width: 72px;
+        height: 72px;
+    }
+
+    .toolbar {
+        top: 10px;
+        right: 8px;
+    }
+
+    .toolbar button {
+        padding: 8px 10px;
+        font-size: 11px;
+    }
+
+    .pokemon {
+        width: 55px;
+        height: 55px;
+    }
+
+    .walker-0 { top: 42%; left: 5px; }
+    .walker-1 { top: 42%; right: 5px; }
+    .walker-2 { bottom: 5px; left: 5px; }
+    .walker-3 { bottom: 5px; right: 5px; }
+    .walker-4, .walker-5 { display: none; }
+
+    .calculator {
+        width: 310px;
+        padding: 17px;
+    }
+
+    .buttons button {
+        height: 53px;
+    }
+
+    .ball-button.is-pressed .ball-icon {
+        width: 40px;
+        height: 40px;
+    }
+
+    .page-title {
+        font-size: 22px;
+    }
+
+    .pokemon-found {
+        top: 12px;
+    }
+
+    .pokemon-found img {
+        width: 43px;
+        height: 43px;
+    }
+
+    .pokemon-found a {
+        font-size: 12px;
+    }
+
+    .pokemon-number {
+        font-size: 10px;
+    }
+
+    .history-panel {
+        width: 255px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<!-- ผลโปเกมอน -->
+<div class="pokemon-found" id="pokemonFound">
+    <a id="pokemonLink" href="#" target="_blank" rel="noopener noreferrer">
+        <img id="pokemonImage" src="" alt="Pokemon">
+        <span>
+            <span id="pokemonName"></span><br>
+            <span class="pokemon-number" id="pokemonNumber"></span>
+        </span>
+    </a>
+</div>
+
+<h1 class="page-title">🌿 Pokémon Calculator</h1>
+
+<!-- ตราประจำตัว -->
+<div class="upload-panel">
+    <label for="emblemUpload" class="emblem-frame">
+        <div class="emblem-inner">
+            <span class="emblem-placeholder" id="emblemPlaceholder">✧</span>
+            <img id="emblemImage" alt="ตราประจำตัว">
+        </div>
+    </label>
+    <input type="file" id="emblemUpload" accept="image/*" hidden>
+</div>
+
+<!-- เครื่องมือ -->
+<div class="toolbar">
+    <button onclick="toggleTheme()">🌙 / ☀️ ธีม</button>
+    <button onclick="togglePicker()">🐾 เลือกโปเกมอน</button>
+</div>
+
+<!-- เลือกโปเกมอน -->
+<div id="pokemonPicker">
+    <b>เลือกโปเกมอน (สูงสุด 6 ตัว)</b>
+    <div id="pokemonOptions"></div>
+    <div id="pokemonCount"></div>
+</div>
+
+<!-- โปเกมอนเดินเล่น -->
+<img class="pokemon walker-0" id="poke0" alt="">
+<img class="pokemon walker-1" id="poke1" alt="">
+<img class="pokemon walker-2" id="poke2" alt="">
+<img class="pokemon walker-3" id="poke3" alt="">
+<img class="pokemon walker-4" id="poke4" alt="">
+<img class="pokemon walker-5" id="poke5" alt="">
+
+<!-- ระบบสุ่มโปเกมอน -->
+<div id="randomEncounter">
+    <img id="randomPokemon" src="" alt="Random Pokémon">
+</div>
+
+<!-- แท็บประวัติ -->
+<button class="history-tab" onclick="toggleHistory()">
+    📋 ประวัติ
+</button>
+
+<div class="history-panel" id="historyPanel">
+    <div class="history-header">
+        <b>📋 ประวัติการคำนวณ</b>
+        <button onclick="clearHistory()">ล้าง</button>
+    </div>
+    <div id="historyList"></div>
+</div>
+
+<!-- เครื่องคิดเลข -->
+<div class="calculator">
+
+    <div class="display">
+        <div class="expression" id="expression">0</div>
+        <div class="result" id="result">0</div>
+    </div>
+
+    <div class="buttons">
+
+        <button class="clear" onclick="clearAll()">AC</button>
+        <button class="operator" onclick="deleteLast()">DEL</button>
+        <button class="operator" onclick="append('%')">%</button>
+        <button class="operator" onclick="append('/')">÷</button>
+
+        <button class="ball-button ball-poke" data-key="7" onclick="append('7')">
+            <span class="number">7</span>
+            <span class="ball-icon"></span>
+            <span class="ball-sparkles"><span>✦</span><span>✧</span><span>✦</span><span>✧</span><span>✦</span></span>
+        </button>
+
+        <button class="ball-button ball-great" data-key="8" onclick="append('8')">
+            <span class="number">8</span>
+            <span class="ball-icon"></span>
+            <span class="ball-sparkles"><span>✦</span><span>✧</span><span>✦</span><span>✧</span><span>✦</span></span>
+        </button>
+
+        <button class="ball-button ball-ultra" data-key="9" onclick="append('9')">
+            <span class="number">9</span>
+            <span class="ball-icon"></span>
+            <span class="ball-sparkles"><span>✦</span><span>✧</span><span>✦</span><span>✧</span><span>✦</span></span>
+        </button>
+
+        <button class="operator" onclick="append('*')">×</button>
+
+        <button class="ball-button ball-master" data-key="4" onclick="append('4')">
+            <span class="number">4</span>
+            <span class="ball-icon"></span>
+            <span class="ball-sparkles"><span>✦</span><span>✧</span><span>✦</span><span>✧</span><span>✦</span></span>
+        </button>
+
+        <button class="ball-button ball-premier" data-key="5" onclick="append('5')">
+            <span class="number">5</span>
+            <span class="ball-icon"></span>
+            <span class="ball-sparkles"><span>✦</span><span>✧</span><span>✦</span><span>✧</span><span>✦</span></span>
+        </button>
+
+        <button class="ball-button ball-heal" data-key="6" onclick="append('6')">
+            <span class="number">6</span>
+            <span class="ball-icon"></span>
+            <span class="ball-sparkles"><span>✦</span><span>✧</span><span>✦</span><span>✧</span><span>✦</span></span>
+        </button>
+
+        <button class="operator" onclick="append('-')">−</button>
+
+        <button class="ball-button ball-net" data-key="1" onclick="append('1')">
+            <span class="number">1</span>
+            <span class="ball-icon"></span>
+            <span class="ball-sparkles"><span>✦</span><span>✧</span><span>✦</span><span>✧</span><span>✦</span></span>
+        </button>
+
+        <button class="ball-button ball-dusk" data-key="2" onclick="append('2')">
+            <span class="number">2</span>
+            <span class="ball-icon"></span>
+            <span class="ball-sparkles"><span>✦</span><span>✧</span><span>✦</span><span>✧</span><span>✦</span></span>
+        </button>
+
+        <button class="ball-button ball-quick" data-key="3" onclick="append('3')">
+            <span class="number">3</span>
+            <span class="ball-icon"></span>
+            <span class="ball-sparkles"><span>✦</span><span>✧</span><span>✦</span><span>✧</span><span>✦</span></span>
+        </button>
+
+        <button class="operator" onclick="append('+')">+</button>
+
+        <button class="ball-button ball-luxury" data-key="±" onclick="toggleSign()">
+            <span class="number">±</span>
+            <span class="ball-icon"></span>
+            <span class="ball-sparkles"><span>✦</span><span>✧</span><span>✦</span><span>✧</span><span>✦</span></span>
+        </button>
+
+        <button class="ball-button ball-poke" data-key="0" onclick="append('0')">
+            <span class="number">0</span>
+            <span class="ball-icon"></span>
+            <span class="ball-sparkles"><span>✦</span><span>✧</span><span>✦</span><span>✧</span><span>✦</span></span>
+        </button>
+
+        <button class="ball-button ball-premier" data-key="." onclick="append('.')">
+            <span class="number">.</span>
+            <span class="ball-icon"></span>
+            <span class="ball-sparkles"><span>✦</span><span>✧</span><span>✦</span><span>✧</span><span>✦</span></span>
+        </button>
+
+        <button class="equal" onclick="calculate()">=</button>
+
+    </div>
+</div>
+
+<script>
+
+// ---------------- เครื่องคิดเลข ----------------
+
+let current = "";
+let calculationToken = 0;
+
+const expressionDisplay = document.getElementById("expression");
+const resultDisplay = document.getElementById("result");
+
+function updateDisplay() {
+    expressionDisplay.textContent = current || "0";
+}
+
+function append(value) {
+
+    const operators = ["+", "-", "*", "/"];
+
+    if (operators.includes(value)) {
+
+        if (!current && value !== "-") return;
+
+        if (operators.includes(current.slice(-1))) {
+            current = current.slice(0, -1);
+        }
+    }
+
+    if (value === ".") {
+
+        const lastNumber = current.split(/[+\-*/%]/).pop();
+
+        if (lastNumber.includes(".")) return;
+        if (!lastNumber) current += "0";
+    }
+
+    current += value;
+
+    hidePokemon();
+    resultDisplay.textContent = "0";
+
+    updateDisplay();
+    showBallEffect(value);
+}
+
+function clearAll() {
+
+    current = "";
+    resultDisplay.textContent = "0";
+
+    calculationToken++;
+
+    hidePokemon();
+    resetBallEffects();
+    updateDisplay();
+}
+
+function deleteLast() {
+
+    current = current.slice(0, -1);
+
+    calculationToken++;
+
+    hidePokemon();
+    resetBallEffects();
+    updateDisplay();
+}
+
+function toggleSign() {
+
+    if (!current) return;
+
+    const match = current.match(/(-?\d+\.?\d*)$/);
+
+    if (match) {
+
+        const number = match[0];
+
+        const changed = number.startsWith("-")
+            ? number.slice(1)
+            : "-" + number;
+
+        current = current.slice(0, -number.length) + changed;
+
+        calculationToken++;
+
+        hidePokemon();
+        updateDisplay();
+        showBallEffect("±");
+    }
+}
+
+// ---------------- เอฟเฟกต์โปเกบอล ----------------
+
+let ballTimers = {};
+
+function resetBallEffects() {
+
+    document.querySelectorAll(".ball-button").forEach(button => {
+        button.classList.remove("is-pressed");
+    });
+
+    Object.values(ballTimers).forEach(timer => clearTimeout(timer));
+
+    ballTimers = {};
+}
+
+function showBallEffect(value) {
+
+    const button = document.querySelector(
+        '.ball-button[data-key="' + value + '"]'
+    );
+
+    if (!button) return;
+
+    if (ballTimers[value]) {
+        clearTimeout(ballTimers[value]);
+    }
+
+    button.classList.remove("is-pressed");
+
+    void button.offsetWidth;
+
+    button.classList.add("is-pressed");
+
+    ballTimers[value] = setTimeout(() => {
+
+        button.classList.remove("is-pressed");
+
+        delete ballTimers[value];
+
+    }, 1000);
+}
+
+// ---------------- ซ่อนโปเกมอน ----------------
+
+function hidePokemon() {
+    document.getElementById("pokemonFound").style.display = "none";
+}
+
+// ---------------- คำนวณ ----------------
+
+async function calculate() {
+
+    if (!current) return;
+
+    const calculation = current;
+    const token = ++calculationToken;
+
+    try {
+
+        if (!/^[0-9+\-*/%.() ]+$/.test(calculation)) {
+            throw new Error("Invalid");
+        }
+
+        const answer = Function(
+            '"use strict"; return (' + calculation + ')'
+        )();
+
+        if (!Number.isFinite(answer)) {
+            throw new Error("Invalid");
+        }
+
+        const finalAnswer = Number(answer.toFixed(10));
+
+        expressionDisplay.textContent = calculation + " =";
+        resultDisplay.textContent = finalAnswer.toString();
+
+        current = finalAnswer.toString();
+
+        hidePokemon();
+        resetBallEffects();
+
+        saveHistory(calculation, finalAnswer);
+
+        await findPokemon(finalAnswer, token);
+
+    } catch {
+
+        resultDisplay.textContent = "Error";
+        hidePokemon();
+    }
+}
+
+// ---------------- ประวัติการคำนวณ ----------------
+
+let calculationHistory = [];
+
+try {
+
+    calculationHistory = JSON.parse(
+        localStorage.getItem("calculationHistory")
+    ) || [];
+
+} catch {
+
+    calculationHistory = [];
+}
+
+function saveHistory(expression, answer) {
+
+    calculationHistory.unshift({
+        expression: expression,
+        result: answer.toString()
+    });
+
+    calculationHistory = calculationHistory.slice(0, 5);
+
+    localStorage.setItem(
+        "calculationHistory",
+        JSON.stringify(calculationHistory)
+    );
+
+    renderHistory();
+}
+
+function renderHistory() {
+
+    const list = document.getElementById("historyList");
+
+    list.innerHTML = "";
+
+    if (calculationHistory.length === 0) {
+
+        list.innerHTML =
+            '<div class="history-empty">ยังไม่มีประวัติการคำนวณ</div>';
+
+        return;
+    }
+
+    calculationHistory.forEach(item => {
+
+        const button = document.createElement("button");
+
+        button.className = "history-item";
+
+        const expression = document.createElement("div");
+        expression.className = "history-expression";
+        expression.textContent = item.expression;
+
+        const result = document.createElement("div");
+        result.className = "history-result";
+        result.textContent = "= " + item.result;
+
+        button.appendChild(expression);
+        button.appendChild(result);
+
+        button.addEventListener("click", () => {
+
+            current = item.result;
+
+            calculationToken++;
+
+            expressionDisplay.textContent = item.expression + " =";
+            resultDisplay.textContent = item.result;
+
+            hidePokemon();
+            resetBallEffects();
+            updateDisplay();
+
+            closeHistory();
+        });
+
+        list.appendChild(button);
+    });
+}
+
+function toggleHistory() {
+
+    document.getElementById("historyPanel")
+        .classList.toggle("open");
+}
+
+function closeHistory() {
+
+    document.getElementById("historyPanel")
+        .classList.remove("open");
+}
+
+function clearHistory() {
+
+    if (!calculationHistory.length) return;
+
+    if (!confirm("ต้องการล้างประวัติทั้งหมดหรือไม่?")) return;
+
+    calculationHistory = [];
+
+    localStorage.removeItem("calculationHistory");
+
+    renderHistory();
+}
+
+// ---------------- ค้นหาโปเกมอนจากผลลัพธ์ ----------------
+
+async function findPokemon(number, token) {
+
+    if (!Number.isInteger(number) || number < 1 || number > 1025) {
+        return;
+    }
+
+    try {
+
+        const response = await fetch(
+            "https://pokeapi.co/api/v2/pokemon-species/" + number
+        );
+
+        if (!response.ok) return;
+
+        const data = await response.json();
+
+        if (token !== calculationToken) return;
+
+        const englishName = data.names.find(
+            item => item.language.name === "en"
+        );
+
+        const thaiName = data.names.find(
+            item => item.language.name === "th"
+        );
+
+        const name = thaiName
+            ? thaiName.name + " (" + (englishName?.name || data.name) + ")"
+            : englishName
+                ? englishName.name
+                : data.name;
+
+        const pokemonImage = document.getElementById("pokemonImage");
+
+        pokemonImage.src =
+            "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/" +
+            number + ".png";
+
+        pokemonImage.onerror = function() {
+            this.style.display = "none";
+        };
+
+        pokemonImage.onload = function() {
+            this.style.display = "block";
+        };
+
+        document.getElementById("pokemonName").textContent = name;
+
+        document.getElementById("pokemonNumber").textContent =
+            "National Pokédex #" + number;
+
+        document.getElementById("pokemonLink").href =
+            "https://pokemondb.net/pokedex/" + data.name;
+
+        document.getElementById("pokemonFound").style.display = "flex";
+
+    } catch (error) {
+
+        console.error("Pokemon API Error:", error);
+    }
+}
+
+// ---------------- คีย์บอร์ด ----------------
+
+document.addEventListener("keydown", function(event) {
+
+    if (event.target.matches("input")) return;
+
+    if (/^[0-9.]$/.test(event.key)) {
+
+        append(event.key);
+
+    } else if (["+", "-", "*", "/", "%"].includes(event.key)) {
+
+        append(event.key);
+
+    } else if (event.key === "Enter" || event.key === "=") {
+
+        event.preventDefault();
+        calculate();
+
+    } else if (event.key === "Backspace") {
+
+        deleteLast();
+
+    } else if (event.key === "Escape") {
+
+        clearAll();
+        closeHistory();
+    }
+});
+
+// ---------------- ตราประจำตัว ----------------
+
+const emblemUpload = document.getElementById("emblemUpload");
+const emblemImage = document.getElementById("emblemImage");
+const emblemPlaceholder = document.getElementById("emblemPlaceholder");
+
+const savedEmblem = localStorage.getItem("pokemonEmblem");
+
+if (savedEmblem) {
+    showEmblem(savedEmblem);
+}
+
+function showEmblem(imageData) {
+
+    emblemImage.src = imageData;
+    emblemImage.style.display = "block";
+    emblemPlaceholder.style.display = "none";
+}
+
+emblemUpload.addEventListener("change", function(event) {
+
+    const file = event.target.files[0];
+
+    if (!file || !file.type.startsWith("image/")) return;
+
+    const reader = new FileReader();
+
+    reader.onload = function() {
+
+        const imageData = reader.result;
+
+        try {
+
+            localStorage.setItem("pokemonEmblem", imageData);
+            showEmblem(imageData);
+
+        } catch {
+
+            alert("รูปมีขนาดใหญ่เกินกว่าจะบันทึกได้ กรุณาเลือกรูปที่เล็กลง");
+        }
+    };
+
+    reader.readAsDataURL(file);
+
+    emblemUpload.value = "";
+});
+
+// ---------------- ธีม ----------------
+
+let theme = localStorage.getItem("pokemonTheme") || "light";
+
+function applyTheme() {
+
+    document.body.classList.toggle("dark", theme === "dark");
+
+    updatePokemon();
+}
+
+function toggleTheme() {
+
+    theme = theme === "light" ? "dark" : "light";
+
+    localStorage.setItem("pokemonTheme", theme);
+
+    applyTheme();
+}
+
+// ---------------- รายชื่อโปเกมอนเดินเล่น ----------------
+
+const pokemonList = [
+    {name:"Pikachu", id:25},
+    {name:"Eevee", id:133},
+    {name:"Bulbasaur", id:1},
+    {name:"Charmander", id:4},
+    {name:"Squirtle", id:7},
+    {name:"Togepi", id:175},
+    {name:"Vulpix", id:37},
+    {name:"Jigglypuff", id:39},
+    {name:"Psyduck", id:54},
+    {name:"Snorlax", id:143},
+    {name:"Dratini", id:147},
+    {name:"Gengar", id:94}
+];
+
+let selectedPokemon = [];
+
+try {
+
+    selectedPokemon = JSON.parse(
+        localStorage.getItem("selectedPokemon")
+    ) || [
+        "Pikachu",
+        "Eevee",
+        "Bulbasaur",
+        "Charmander",
+        "Squirtle",
+        "Togepi"
+    ];
+
+} catch {
+
+    selectedPokemon = [
+        "Pikachu",
+        "Eevee",
+        "Bulbasaur",
+        "Charmander",
+        "Squirtle",
+        "Togepi"
+    ];
+}
+
+selectedPokemon = selectedPokemon
+    .filter(name => pokemonList.some(p => p.name === name))
+    .slice(0, 6);
+
+const options = document.getElementById("pokemonOptions");
+const countDisplay = document.getElementById("pokemonCount");
+
+function createPokemonOptions() {
+
+    options.innerHTML = "";
+
+    pokemonList.forEach(pokemon => {
+
+        const label = document.createElement("label");
+
+        label.style.cursor = "pointer";
+
+        const checkbox = document.createElement("input");
+
+        checkbox.type = "checkbox";
+        checkbox.value = pokemon.name;
+        checkbox.checked = selectedPokemon.includes(pokemon.name);
+
+        checkbox.addEventListener("change", function() {
+
+            if (checkbox.checked) {
+
+                if (selectedPokemon.length >= 6) {
+
+                    checkbox.checked = false;
+
+                    alert("เลือกโปเกมอนได้สูงสุด 6 ตัว");
+
+                    return;
+                }
+
+                selectedPokemon.push(pokemon.name);
+
+            } else {
+
+                selectedPokemon = selectedPokemon.filter(
+                    name => name !== pokemon.name
+                );
+            }
+
+            localStorage.setItem(
+                "selectedPokemon",
+                JSON.stringify(selectedPokemon)
+            );
+
+            updatePokemon();
+            updateCount();
+        });
+
+        label.appendChild(checkbox);
+        label.append(" " + pokemon.name);
+
+        options.appendChild(label);
+    });
+
+    updateCount();
+}
+
+function updateCount() {
+
+    countDisplay.textContent =
+        "เลือกแล้ว " + selectedPokemon.length + " / 6 ตัว";
+}
+
+function updatePokemon() {
+
+    for (let i = 0; i < 6; i++) {
+
+        const img = document.getElementById("poke" + i);
+        const name = selectedPokemon[i];
+
+        if (!name) {
+
+            img.style.display = "none";
+
+            continue;
+        }
+
+        const pokemon = pokemonList.find(p => p.name === name);
+
+        if (!pokemon) {
+
+            img.style.display = "none";
+
+            continue;
+        }
+
+        img.src =
+            "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/showdown/" +
+            pokemon.id + ".gif";
+
+        img.style.display = "block";
+
+        img.onerror = function() {
+
+            this.onerror = null;
+
+            this.src =
+                "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/" +
+                pokemon.id + ".png";
+        };
+    }
+}
+
+// ---------------- เลือกโปเกมอน ----------------
+
+function togglePicker() {
+
+    const picker = document.getElementById("pokemonPicker");
+
+    picker.style.display =
+        picker.style.display === "none" ? "block" : "none";
+}
+
+// ---------------- Pokémon Random Encounter ----------------
+
+const encounterContainer = document.getElementById("randomEncounter");
+const encounterImage = document.getElementById("randomPokemon");
+
+let encounterTimer = null;
+let encounterInterval = null;
+
+function randomEncounter() {
+
+    // สุ่มโปเกมอนหมายเลข 1-1025
+    const pokemonID = Math.floor(Math.random() * 1025) + 1;
+
+    // สุ่มรูปแบบการปรากฏตัว
+    const encounterType = Math.random() < 0.5
+        ? "flying"
+        : "background";
+
+    clearTimeout(encounterTimer);
+
+    // รีเซ็ตเอฟเฟกต์
+    encounterContainer.className = "";
+    encounterImage.style.animation = "none";
+
+    void encounterImage.offsetWidth;
+
+    // สุ่มรูปโปเกมอน
+    if (encounterType === "flying") {
+
+        // แบบบินผ่าน
+        encounterImage.onerror = function() {
+
+            this.onerror = null;
+
+            this.src =
+                "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/" +
+                pokemonID + ".png";
+        };
+
+        encounterImage.src =
+            "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/showdown/" +
+            pokemonID + ".gif";
+
+    } else {
+
+        // แบบภาพใหญ่
+        encounterImage.onerror = null;
+
+        encounterImage.src =
+            "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/" +
+            pokemonID + ".png";
+    }
+
+    // แสดงเอฟเฟกต์
+    encounterContainer.classList.add(encounterType);
+
+    // ซ่อนหลัง 3 วินาที
+    encounterTimer = setTimeout(() => {
+
+        encounterContainer.className = "";
+        encounterImage.src = "";
+
+    }, 3000);
+}
+
+// เริ่มสุ่มทุก 1 นาที
+encounterInterval = setInterval(randomEncounter, 60000);
+
+// หากต้องการให้สุ่มทันทีเมื่อเปิดเว็บ
+randomEncounter();
+
+// ---------------- เริ่มต้นระบบ ----------------
+
+createPokemonOptions();
+applyTheme();
+updateDisplay();
+renderHistory();
+
+</script>
+
+</body>
+</html>
